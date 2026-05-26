@@ -213,7 +213,7 @@ OAuth host chain: `KIMI_CODE_OAUTH_HOST` → `KIMI_OAUTH_HOST` → `https://auth
 
 | Variable                                            | Used by                                                       |
 | --------------------------------------------------- | ------------------------------------------------------------- |
-| `EXA_API_KEY`                                       | Exa search provider and Exa MCP tools                         |
+| `EXA_API_KEY`                                       | Exa search provider                         |
 | `BRAVE_API_KEY`                                     | Brave search provider                                         |
 | `PERPLEXITY_API_KEY`                                | Perplexity search provider API-key mode                       |
 | `PERPLEXITY_COOKIES`                                | Perplexity cookie-auth search mode                            |
@@ -351,7 +351,7 @@ These are read as runtime signals; they are usually set by the terminal/OS rathe
 | `KITTY_WINDOW_ID`, `TMUX_PANE`, `TERM_SESSION_ID`, `WT_SESSION`                                                    | Stable per-terminal session breadcrumb IDs                |
 | `SHELL`, `ComSpec`, `TERM_PROGRAM`, `TERM`                                                                         | System info diagnostics                                   |
 | `APPDATA`, `XDG_CONFIG_HOME`                                                                                       | lspmux config path resolution                             |
-| `HOME`                                                                                                             | Path shortening in MCP command UI                         |
+| `HOME`                                                                                                             | Path shortening in command UI                         |
 
 ---
 

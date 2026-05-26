@@ -25,6 +25,15 @@ const FORBIDDEN_PUBLIC_DOC_PATTERNS: readonly RegExp[] = [
 	/mcp-config/u,
 	/mcp-server/u,
 ];
+const FORBIDDEN_EXA_MCP_DOC_PATTERNS: readonly RegExp[] = [
+	/Exa MCP/u,
+	/web_search_exa/u,
+	/mcp\.exa/u,
+	/without EXA_API_KEY/u,
+	/fall(?:s| back)? to MCP/u,
+	/public MCP/u,
+	/Exa search provider and Exa MCP/u,
+];
 const FORBIDDEN_SKILL_PATTERNS: readonly RegExp[] = [
 	/\bomx\s+(team|state|question|ultragoal|ralplan|deep-interview)/u,
 	/\$ralph/u,
@@ -213,6 +222,7 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 	];
 	const presentInternalMcpPaths = internalMcpPaths.filter(relativePath => fs.existsSync(path.join(repoRoot, relativePath)));
 	const publicDocFindings = await findPublicDocFindings();
+	const exaMcpDocFindings = await findExaMcpDocFindings();
 	const forbiddenImportFindings = await probeForbiddenPackageImports();
 	const removedPublicDocsStillPresent = [
 		"docs/mcp-config.md",
@@ -232,6 +242,7 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 		`Exa public MCP fallback present: ${exaUsesPublicMcpFallback}`,
 		`private MCP implementation paths retained: ${presentInternalMcpPaths.join(", ") || "<none>"}`,
 		`public doc findings: ${publicDocFindings.join(", ") || "<none>"}`,
+		`Exa MCP fallback doc findings: ${exaMcpDocFindings.join(", ") || "<none>"}`,
 		`forbidden package imports still resolving: ${forbiddenImportFindings.join(", ") || "<none>"}`,
 		`removed public MCP docs still present: ${removedPublicDocsStillPresent.join(", ") || "<none>"}`,
 	];
@@ -243,6 +254,7 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 			missingPrivateBlocks.length === 0 &&
 			forbiddenImportFindings.length === 0 &&
 			publicDocFindings.length === 0 &&
+			exaMcpDocFindings.length === 0 &&
 			removedPublicDocsStillPresent.length === 0 &&
 			!exposesMcpBuiltin &&
 			!importsMcpBuiltinHandler &&
@@ -260,6 +272,22 @@ async function findPublicDocFindings(): Promise<string[]> {
 	for (const relativePath of PUBLIC_DOC_FILES) {
 		const text = await readText(relativePath);
 		for (const pattern of FORBIDDEN_PUBLIC_DOC_PATTERNS) {
+			if (pattern.test(text)) findings.push(`${relativePath}: ${pattern.source}`);
+		}
+	}
+	return findings;
+}
+
+async function findExaMcpDocFindings(): Promise<string[]> {
+	const findings: string[] = [];
+	const files = [
+		"docs/tools/web_search.md",
+		"docs/environment-variables.md",
+		"packages/coding-agent/src/internal-urls/docs-index.generated.ts",
+	] as const;
+	for (const relativePath of files) {
+		const text = await readText(relativePath);
+		for (const pattern of FORBIDDEN_EXA_MCP_DOC_PATTERNS) {
 			if (pattern.test(text)) findings.push(`${relativePath}: ${pattern.source}`);
 		}
 	}

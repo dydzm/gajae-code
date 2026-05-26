@@ -14,7 +14,7 @@
   - `packages/coding-agent/src/web/search/providers/anthropic.ts` — Claude web-search provider.
   - `packages/coding-agent/src/web/search/providers/brave.ts` — Brave Search API adapter.
   - `packages/coding-agent/src/web/search/providers/codex.ts` — OpenAI Codex SSE adapter.
-  - `packages/coding-agent/src/web/search/providers/exa.ts` — Exa API or MCP adapter.
+  - `packages/coding-agent/src/web/search/providers/exa.ts` — Exa API adapter.
   - `packages/coding-agent/src/web/search/providers/gemini.ts` — Gemini grounding SSE adapter.
   - `packages/coding-agent/src/web/search/providers/jina.ts` — Jina Reader search adapter.
   - `packages/coding-agent/src/web/search/providers/kagi.ts` — Kagi provider wrapper.
@@ -24,7 +24,7 @@
   - `packages/coding-agent/src/web/search/providers/searxng.ts` — self-hosted SearXNG adapter.
   - `packages/coding-agent/src/web/search/providers/synthetic.ts` — Synthetic search adapter.
   - `packages/coding-agent/src/web/search/providers/tavily.ts` — Tavily search adapter.
-  - `packages/coding-agent/src/web/search/providers/zai.ts` — Z.AI remote MCP adapter.
+  - `packages/coding-agent/src/web/search/providers/zai.ts` — Z.AI remote search adapter.
   - `packages/coding-agent/src/web/parallel.ts` — Parallel search/extract HTTP client.
   - `packages/coding-agent/src/web/kagi.ts` — Kagi HTTP client.
   - `packages/coding-agent/src/tools/index.ts` — built-in tool registration and enable flag.
@@ -140,13 +140,13 @@ Streaming: none. `WebSearchTool.execute()` does not forward its `_signal` argume
     - Output may include `answer`, `sources`, `usage`, `model`, `requestId`. If the streamed response has no `url_citation` annotations, the adapter falls back to scraping markdown links and bare URLs from the answer text.
   - **Z.AI** — `packages/coding-agent/src/web/search/providers/zai.ts`
     - Availability: env or `agent.db` credential for `zai`.
-    - Querying: JSON-RPC `tools/call` against `https://api.z.ai/api/mcp/web_search_prime/mcp` for remote MCP tool `web_search_prime`.
+    - Querying: JSON-RPC `tools/call` against the Z.AI `web_search_prime` search endpoint.
     - Fallback chain inside the provider: tries `{query,count}`, then `{search_query,count}`, then `{search_query, search_engine:"search-prime", count}` when earlier attempts fail with argument-shape errors.
     - `limit` and `num_search_results` are collapsed together before dispatch.
     - Output may include parsed free-text `answer`, `sources`, `requestId`.
   - **Exa** — `packages/coding-agent/src/web/search/providers/exa.ts`
-    - Availability: always true unless settings explicitly disable `exa.enabled` or `exa.enableSearch`; the adapter can use public MCP even without `EXA_API_KEY`.
-    - Querying: with `EXA_API_KEY`, POST `https://api.exa.ai/search`; otherwise call MCP tool `web_search_exa`.
+    - Availability: requires `EXA_API_KEY` and settings must not disable `exa.enabled` or `exa.enableSearch`.
+    - Querying: POST `https://api.exa.ai/search` with `EXA_API_KEY`. No no-key fallback is used.
     - `limit` and `num_search_results` are collapsed together before dispatch.
     - Output: synthesized `answer` from up to 3 result summaries, `sources`, `requestId`.
   - **Parallel** — `packages/coding-agent/src/web/search/providers/parallel.ts`, `packages/coding-agent/src/web/parallel.ts`
@@ -221,4 +221,4 @@ Streaming: none. `WebSearchTool.execute()` does not forward its `_signal` argume
 - The prompt says `recency` is for Brave and Perplexity, but code also implements it for Tavily and SearXNG.
 - The year rewrite in `executeSearch()` is blunt: any `2020`-`2029` substring is replaced with the current year.
 - `packages/coding-agent/src/config/settings-schema.ts` exposes provider preferences for `auto`, `exa`, `brave`, `jina`, `kimi`, `perplexity`, `anthropic`, `zai`, `tavily`, `kagi`, `synthetic`, `parallel`, and `searxng`. Gemini and Codex are in the registry and auto chain but not in that settings enum.
-- Exa availability is optimistic. Unless settings disable it, the provider stays in the chain even without an API key because it can fall back to MCP.
+- Exa availability fails closed unless `EXA_API_KEY` is present and Exa settings remain enabled.
